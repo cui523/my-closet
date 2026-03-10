@@ -127,8 +127,9 @@ export default function AddClothes({ onSuccess, categories, onAddCategory }: Add
       updateActiveItem({ category: name });
       setNewCategory('');
       setShowNewCategoryInput(false);
-    } catch (error) {
-      alert("添加类别失败");
+    } catch (error: any) {
+      console.error("Failed to add category:", error);
+      alert(`添加类别失败: ${error.message || '未知错误'}`);
     }
   };
 

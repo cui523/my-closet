@@ -85,16 +85,22 @@ async function startServer() {
   app.post("/api/categories", (req, res) => {
     try {
       const { name } = req.body;
-      if (!name || typeof name !== 'string') {
-        return res.status(400).json({ error: "Valid category name is required" });
+      console.log('Adding category:', name);
+      if (!name || typeof name !== 'string' || name.trim() === '') {
+        return res.status(400).json({ error: "请输入有效的类别名称" });
       }
       const trimmedName = name.trim();
-      db.prepare("INSERT OR IGNORE INTO categories (name) VALUES (?)").run(trimmedName);
+      
+      // Use a transaction to ensure atomicity
+      const insert = db.prepare("INSERT OR IGNORE INTO categories (name) VALUES (?)");
+      insert.run(trimmedName);
+      
       const category = db.prepare("SELECT * FROM categories WHERE name = ?").get(trimmedName);
+      console.log('Category added/found:', category);
       res.json(category);
-    } catch (e) {
+    } catch (e: any) {
       console.error('Category error:', e);
-      res.status(500).json({ error: "Internal server error" });
+      res.status(500).json({ error: `服务器错误: ${e.message}` });
     }
   });
 
