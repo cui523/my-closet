@@ -16,6 +16,7 @@ export default function Wardrobe({ items, categories, onSelectItem, selectedIds,
   const [filterSeasons, setFilterSeasons] = useState<Season[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [detailItem, setDetailItem] = useState<ClothingItem | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const filteredItems = items.filter(item => {
     const matchesCategory = filterCategories.length === 0 || filterCategories.includes(item.category);
@@ -104,7 +105,7 @@ export default function Wardrobe({ items, categories, onSelectItem, selectedIds,
                 referrerPolicy="no-referrer"
               />
               
-              <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex justify-between items-end">
+              <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/40 to-transparent opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex justify-between items-end">
                 <button 
                   onClick={(e) => {
                     e.stopPropagation();
@@ -112,17 +113,42 @@ export default function Wardrobe({ items, categories, onSelectItem, selectedIds,
                   }}
                   className="p-2 bg-white/90 backdrop-blur rounded-full shadow-sm hover:bg-white"
                 >
-                  <Info className="w-3 h-3" />
+                  <Info className="w-4 h-4 sm:w-3 sm:h-3" />
                 </button>
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if(confirm('确定要删除这件衣服吗？')) onDeleteItem(item.id);
-                  }}
-                  className="p-2 bg-white/90 backdrop-blur rounded-full shadow-sm hover:text-red-500"
-                >
-                  <Trash2 className="w-3 h-3" />
-                </button>
+                
+                {deletingId === item.id ? (
+                  <div className="flex gap-1">
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeleteItem(item.id);
+                        setDeletingId(null);
+                      }}
+                      className="px-2 py-1 bg-red-500 text-white rounded-lg shadow-sm text-[10px] font-bold"
+                    >
+                      确认
+                    </button>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeletingId(null);
+                      }}
+                      className="px-2 py-1 bg-white text-black rounded-lg shadow-sm text-[10px] font-bold"
+                    >
+                      取消
+                    </button>
+                  </div>
+                ) : (
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeletingId(item.id);
+                    }}
+                    className="p-2 bg-white/90 backdrop-blur rounded-full shadow-sm text-red-500 hover:bg-red-50"
+                  >
+                    <Trash2 className="w-4 h-4 sm:w-3 sm:h-3" />
+                  </button>
+                )}
               </div>
 
               {selectedIds.includes(item.id) && (
@@ -165,12 +191,23 @@ export default function Wardrobe({ items, categories, onSelectItem, selectedIds,
                 </div>
               )}
 
-              <button 
-                onClick={() => setDetailItem(null)}
-                className="w-full py-3 bg-black text-white rounded-xl text-sm font-medium"
-              >
-                关闭
-              </button>
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => {
+                    onDeleteItem(detailItem.id);
+                    setDetailItem(null);
+                  }}
+                  className="flex-1 py-3 bg-red-50 text-red-600 rounded-xl text-sm font-medium hover:bg-red-100 transition-colors"
+                >
+                  确认删除
+                </button>
+                <button 
+                  onClick={() => setDetailItem(null)}
+                  className="flex-[2] py-3 bg-black text-white rounded-xl text-sm font-medium"
+                >
+                  关闭
+                </button>
+              </div>
             </div>
           </motion.div>
         </div>

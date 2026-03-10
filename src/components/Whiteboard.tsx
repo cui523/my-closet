@@ -33,6 +33,26 @@ const URLImage = ({ item, isSelected, onSelect, onChange }: {
   const trRef = useRef<any>(null);
 
   useEffect(() => {
+    if (img && item.width === 200 && item.height === 200) {
+      // Set initial size based on aspect ratio
+      const maxWidth = 200;
+      const maxHeight = 200;
+      let width = img.width;
+      let height = img.height;
+
+      const ratio = Math.min(maxWidth / width, maxHeight / height);
+      width *= ratio;
+      height *= ratio;
+
+      onChange({
+        ...item,
+        width,
+        height
+      });
+    }
+  }, [img]);
+
+  useEffect(() => {
     if (isSelected && trRef.current && shapeRef.current) {
       trRef.current.nodes([shapeRef.current]);
       const layer = trRef.current.getLayer();
@@ -64,14 +84,17 @@ const URLImage = ({ item, isSelected, onSelect, onChange }: {
           const node = shapeRef.current;
           const scaleX = node.scaleX();
           const scaleY = node.scaleY();
+          
+          // Reset scale and update width/height to avoid distortion
           node.scaleX(1);
           node.scaleY(1);
+          
           onChange({
             ...item,
             x: node.x(),
             y: node.y(),
             width: Math.max(5, node.width() * scaleX),
-            height: Math.max(node.height() * scaleY),
+            height: Math.max(5, node.height() * scaleY),
             rotation: node.rotation(),
           });
         }}
@@ -79,6 +102,8 @@ const URLImage = ({ item, isSelected, onSelect, onChange }: {
       {isSelected && (
         <Transformer
           ref={trRef}
+          keepRatio={true}
+          enabledAnchors={['top-left', 'top-right', 'bottom-left', 'bottom-right']}
           boundBoxFunc={(oldBox, newBox) => {
             if (newBox.width < 5 || newBox.height < 5) {
               return oldBox;
