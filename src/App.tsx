@@ -38,13 +38,21 @@ export default function App() {
   };
 
   const handleAddCategory = async (name: string) => {
-    await fetch('/api/categories', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name })
-    });
-    const res = await fetch('/api/categories');
-    setCategories(await res.json());
+    try {
+      const response = await fetch('/api/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name })
+      });
+      if (!response.ok) throw new Error('Failed to add category');
+      
+      const res = await fetch('/api/categories');
+      const data = await res.json();
+      setCategories(data);
+    } catch (error) {
+      console.error('Error adding category:', error);
+      throw error;
+    }
   };
 
   const toggleSelectItem = (item: ClothingItem) => {

@@ -41,6 +41,14 @@ async function startServer() {
   const PORT = 3000;
 
   app.use(express.json({ limit: "50mb" }));
+  
+  // Logging middleware
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/api')) {
+      console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+    }
+    next();
+  });
 
   // Serve static manifest
   app.get("/manifest.json", (req, res) => {

@@ -1,7 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { Camera, Upload, Check, X, Loader2, Plus } from 'lucide-react';
 import { removeBackground } from '../services/gemini';
 import { SEASONS, Season } from '../types';
+import { resizeImage } from '../utils/image';
 
 interface AddClothesProps {
   onSuccess: () => void;
@@ -31,7 +32,24 @@ export default function AddClothes({ onSuccess, categories, onAddCategory }: Add
     reader.onload = async (event) => {
       const base64 = event.target?.result as string;
       setImage(base64);
-      processImage(base64, file.type);
+      
+      try {
+        setIsProcessing(true);
+        setProcessError(false);
+        
+        // Resize image for mobile to avoid payload issues
+        const { base64: resizedBase64, mimeType } = await resizeImage(base64);
+        
+        const result = await removeBackground(resizedBase64, mimeType);
+        setProcessedImage(result);
+        if (result === resizedBase64) setProcessError(true);
+      } catch (error) {
+        console.error("Image processing failed:", error);
+        setProcessedImage(base64);
+        setProcessError(true);
+      } finally {
+        setIsProcessing(false);
+      }
     };
     reader.readAsDataURL(file);
     // Reset input so the same file can be selected again if needed
@@ -39,19 +57,7 @@ export default function AddClothes({ onSuccess, categories, onAddCategory }: Add
   };
 
   const processImage = async (base64: string, mimeType: string) => {
-    setIsProcessing(true);
-    setProcessError(false);
-    try {
-      const result = await removeBackground(base64, mimeType);
-      setProcessedImage(result);
-      if (result === base64) setProcessError(true);
-    } catch (error) {
-      console.error(error);
-      setProcessedImage(base64);
-      setProcessError(true);
-    } finally {
-      setIsProcessing(false);
-    }
+    // This is now handled inside handleFileChange to ensure proper sequencing
   };
 
   const toggleSeason = (season: Season) => {
@@ -90,11 +96,18 @@ export default function AddClothes({ onSuccess, categories, onAddCategory }: Add
   };
 
   const handleAddCategory = async () => {
-    if (!newCategory.trim()) return;
-    await onAddCategory(newCategory.trim());
-    setSelectedCategory(newCategory.trim());
-    setNewCategory('');
-    setShowNewCategoryInput(false);
+    const name = newCategory.trim();
+    if (!name) return;
+    
+    try {
+      await onAddCategory(name);
+      setSelectedCategory(name);
+      setNewCategory('');
+      setShowNewCategoryInput(false);
+    } catch (error) {
+      console.error("Failed to add category:", error);
+      alert("添加类别失败，请重试");
+    }
   };
 
   return (
