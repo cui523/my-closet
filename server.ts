@@ -85,10 +85,16 @@ async function startServer() {
   app.post("/api/categories", (req, res) => {
     try {
       const { name } = req.body;
-      db.prepare("INSERT INTO categories (name) VALUES (?)").run(name);
-      res.json({ success: true });
+      if (!name || typeof name !== 'string') {
+        return res.status(400).json({ error: "Valid category name is required" });
+      }
+      const trimmedName = name.trim();
+      db.prepare("INSERT OR IGNORE INTO categories (name) VALUES (?)").run(trimmedName);
+      const category = db.prepare("SELECT * FROM categories WHERE name = ?").get(trimmedName);
+      res.json(category);
     } catch (e) {
-      res.status(400).json({ error: "Category already exists" });
+      console.error('Category error:', e);
+      res.status(500).json({ error: "Internal server error" });
     }
   });
 

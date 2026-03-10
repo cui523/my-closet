@@ -44,7 +44,11 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name })
       });
-      if (!response.ok) throw new Error('Failed to add category');
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to add category');
+      }
       
       const res = await fetch('/api/categories');
       const data = await res.json();
