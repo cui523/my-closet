@@ -13,6 +13,7 @@ export default function AddClothes({ onSuccess, categories, onAddCategory }: Add
   const [image, setImage] = useState<string | null>(null);
   const [processedImage, setProcessedImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [processError, setProcessError] = useState(false);
   const [selectedSeasons, setSelectedSeasons] = useState<Season[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [location, setLocation] = useState('');
@@ -20,8 +21,7 @@ export default function AddClothes({ onSuccess, categories, onAddCategory }: Add
   const [showNewCategoryInput, setShowNewCategoryInput] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [showCamera, setShowCamera] = useState(false);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -34,16 +34,21 @@ export default function AddClothes({ onSuccess, categories, onAddCategory }: Add
       processImage(base64, file.type);
     };
     reader.readAsDataURL(file);
+    // Reset input so the same file can be selected again if needed
+    e.target.value = '';
   };
 
   const processImage = async (base64: string, mimeType: string) => {
     setIsProcessing(true);
+    setProcessError(false);
     try {
       const result = await removeBackground(base64, mimeType);
       setProcessedImage(result);
+      if (result === base64) setProcessError(true);
     } catch (error) {
       console.error(error);
       setProcessedImage(base64);
+      setProcessError(true);
     } finally {
       setIsProcessing(false);
     }
@@ -100,19 +105,20 @@ export default function AddClothes({ onSuccess, categories, onAddCategory }: Add
         <div className="grid grid-cols-2 gap-4 mb-8">
           <button 
             className="flex flex-col items-center justify-center aspect-square border-2 border-dashed border-black/10 rounded-2xl hover:bg-black/5 active:scale-95 transition-all"
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => cameraInputRef.current?.click()}
           >
             <Camera className="w-8 h-8 mb-2 opacity-50" />
-            <span className="text-sm font-medium">拍照/上传</span>
+            <span className="text-sm font-medium">拍照录入</span>
           </button>
           <input 
             type="file" 
-            ref={fileInputRef} 
+            ref={cameraInputRef} 
             className="hidden" 
             accept="image/*" 
             capture="environment"
             onChange={handleFileChange} 
           />
+          
           <button 
             className="flex flex-col items-center justify-center aspect-square border-2 border-dashed border-black/10 rounded-2xl hover:bg-black/5 active:scale-95 transition-all"
             onClick={() => fileInputRef.current?.click()}
@@ -120,6 +126,13 @@ export default function AddClothes({ onSuccess, categories, onAddCategory }: Add
             <Upload className="w-8 h-8 mb-2 opacity-50" />
             <span className="text-sm font-medium">相册选择</span>
           </button>
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            className="hidden" 
+            accept="image/*" 
+            onChange={handleFileChange} 
+          />
         </div>
       ) : (
         <div className="space-y-6">
@@ -130,12 +143,19 @@ export default function AddClothes({ onSuccess, categories, onAddCategory }: Add
                 <p className="text-xs font-mono uppercase tracking-widest opacity-50">正在自动抠图...</p>
               </div>
             ) : (
-              <img 
-                src={processedImage || image} 
-                alt="Preview" 
-                className="max-w-full max-h-full object-contain"
-                referrerPolicy="no-referrer"
-              />
+              <div className="relative w-full h-full flex items-center justify-center">
+                <img 
+                  src={processedImage || image} 
+                  alt="Preview" 
+                  className="max-w-full max-h-full object-contain"
+                  referrerPolicy="no-referrer"
+                />
+                {processError && (
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur text-white text-[10px] px-3 py-1 rounded-full">
+                    抠图失败，已使用原图
+                  </div>
+                )}
+              </div>
             )}
             <button 
               onClick={reset}
@@ -187,14 +207,30 @@ export default function AddClothes({ onSuccess, categories, onAddCategory }: Add
                       type="text"
                       value={newCategory}
                       onChange={(e) => setNewCategory(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddCategory();
+                        }
+                      }}
                       placeholder="输入新类别"
-                      className="flex-1 px-4 py-2 bg-black/5 rounded-full text-sm outline-none focus:ring-1 ring-black/20"
+                      className="flex-1 px-4 py-3 bg-black/5 rounded-full text-sm outline-none focus:ring-2 ring-black/20"
+                      autoFocus
                     />
-                    <button onClick={handleAddCategory} className="p-2 bg-black text-white rounded-full">
-                      <Check className="w-4 h-4" />
+                    <button 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleAddCategory();
+                      }} 
+                      className="px-4 bg-black text-white rounded-full flex items-center justify-center"
+                    >
+                      <Check className="w-5 h-5" />
                     </button>
-                    <button onClick={() => setShowNewCategoryInput(false)} className="p-2 bg-black/5 rounded-full">
-                      <X className="w-4 h-4" />
+                    <button 
+                      onClick={() => setShowNewCategoryInput(false)} 
+                      className="p-3 bg-black/5 rounded-full"
+                    >
+                      <X className="w-5 h-5" />
                     </button>
                   </div>
                 ) : (
@@ -219,13 +255,18 @@ export default function AddClothes({ onSuccess, categories, onAddCategory }: Add
               />
             </div>
 
-            <button
-              onClick={handleSubmit}
-              disabled={!selectedCategory || isProcessing}
-              className="w-full py-4 bg-black text-white rounded-2xl font-medium disabled:opacity-30 disabled:cursor-not-allowed hover:bg-black/90 transition-colors"
-            >
-              保存到衣柜
-            </button>
+            <div className="space-y-2">
+              <button
+                onClick={handleSubmit}
+                disabled={!selectedCategory || isProcessing}
+                className="w-full py-4 bg-black text-white rounded-2xl font-medium disabled:opacity-30 disabled:cursor-not-allowed hover:bg-black/90 active:scale-[0.98] transition-all"
+              >
+                {isProcessing ? '正在处理图片...' : '保存到衣柜'}
+              </button>
+              {!selectedCategory && !isProcessing && image && (
+                <p className="text-[10px] text-center text-red-500 font-medium">请先选择或新增一个类别</p>
+              )}
+            </div>
           </div>
         </div>
       )}

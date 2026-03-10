@@ -15,7 +15,7 @@ export async function removeBackground(base64Image: string, mimeType: string): P
             },
           },
           {
-            text: 'Identify the main clothing item in this image. Return a new image where the clothing item is perfectly isolated on a pure white background. The output should be just the image.',
+            text: 'Remove the background from this image. Keep only the main clothing item. The output must be the clothing item isolated on a pure white background (#FFFFFF). Output only the processed image.',
           },
         ],
       },
