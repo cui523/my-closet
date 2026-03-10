@@ -1,0 +1,20 @@
+{
+  "short_name": "我的衣柜",
+  "name": "我的衣柜 - 智能分类与搭配",
+  "icons": [
+    {
+      "src": "https://picsum.photos/seed/wardrobe/192/192",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://picsum.photos/seed/wardrobe/512/512",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#F5F5F0",
+  "background_color": "#F5F5F0"
+}

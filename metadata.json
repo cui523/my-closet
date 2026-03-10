@@ -1,0 +1,7 @@
+{
+  "name": "我的衣柜 (My Wardrobe)",
+  "description": "一个用于家庭衣服分类、整理和搭配的智能衣柜应用。支持拍照自动抠图、分类管理及自由搭配白板。",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
