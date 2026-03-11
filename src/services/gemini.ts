@@ -1,8 +1,14 @@
 import { GoogleGenAI } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+// Use VITE_ prefix for client-side exposure on platforms like Vercel
+const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || "";
+const ai = new GoogleGenAI({ apiKey });
 
 export async function removeBackground(base64Image: string, mimeType: string): Promise<string> {
+  if (!apiKey) {
+    console.warn("GEMINI_API_KEY is not configured. Background removal will be skipped.");
+    return base64Image;
+  }
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image',

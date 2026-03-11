@@ -7,7 +7,13 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const db = new Database("wardrobe.db");
+let db: any;
+try {
+  db = new Database("wardrobe.db");
+} catch (err) {
+  console.warn("无法在磁盘创建数据库，切换到内存模式（Vercel 环境下数据无法持久化）:", err);
+  db = new Database(":memory:");
+}
 
 // Initialize database
 db.exec(`

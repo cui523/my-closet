@@ -47,19 +47,17 @@ export default function AddClothes({ onSuccess, categories, onAddCategory }: Add
       ));
 
       try {
-        const { base64: resizedBase64, mimeType } = await resizeImage(item.original);
-        const result = await removeBackground(resizedBase64, mimeType);
-        
+        // Skip background removal as requested
         setItems(prev => prev.map((it, idx) => 
           idx === nextIndex ? { 
             ...it, 
-            processed: result, 
+            processed: item.original, 
             isProcessing: false,
-            error: result === resizedBase64 
+            error: false 
           } : it
         ));
       } catch (error) {
-        console.error("Batch processing failed:", error);
+        console.error("Processing failed:", error);
         setItems(prev => prev.map((it, idx) => 
           idx === nextIndex ? { 
             ...it, 
@@ -87,9 +85,12 @@ export default function AddClothes({ onSuccess, categories, onAddCategory }: Add
       reader.readAsDataURL(file);
       const base64 = await promise;
       
+      // Resize to keep localStorage size manageable
+      const { base64: resizedBase64 } = await resizeImage(base64);
+      
       newItems.push({
         id: Math.random().toString(36).substr(2, 9),
-        original: base64,
+        original: resizedBase64,
         processed: null,
         isProcessing: false,
         error: false,
@@ -136,34 +137,29 @@ export default function AddClothes({ onSuccess, categories, onAddCategory }: Add
   const handleSaveActive = async () => {
     if (!activeItem || !activeItem.processed || !activeItem.category) return;
 
-    const response = await fetch('/api/clothes', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        image: activeItem.processed,
-        originalImage: activeItem.original,
-        seasons: activeItem.seasons,
-        category: activeItem.category,
-        location: activeItem.location
-      })
-    });
+    const newItem = {
+      id: Date.now(),
+      image: activeItem.processed,
+      originalImage: activeItem.original,
+      seasons: activeItem.seasons,
+      category: activeItem.category,
+      location: activeItem.location,
+      createdAt: new Date().toISOString()
+    };
 
-    if (response.ok) {
-      updateActiveItem({ isSaved: true });
-      // Move to next unsaved item or finish
-      const nextUnsaved = items.findIndex((it, idx) => !it.isSaved && idx !== activeIndex);
-      if (nextUnsaved !== -1) {
-        // We don't want to just jump, maybe let user click? 
-        // User requested "依次填写", so let's auto-advance if possible
-      }
-      
-      // If all saved, trigger success
-      const allSaved = items.every((it, idx) => idx === activeIndex ? true : it.isSaved);
-      if (allSaved) {
-        onSuccess();
-        setItems([]);
-        setActiveIndex(-1);
-      }
+    // Save to localStorage via App's onSuccess or direct implementation
+    // For simplicity, we'll let App handle the state update
+    const savedItems = JSON.parse(localStorage.getItem('wardrobe_items') || '[]');
+    localStorage.setItem('wardrobe_items', JSON.stringify([...savedItems, newItem]));
+
+    updateActiveItem({ isSaved: true });
+    
+    // If all saved, trigger success
+    const allSaved = items.every((it, idx) => idx === activeIndex ? true : it.isSaved);
+    if (allSaved) {
+      onSuccess();
+      setItems([]);
+      setActiveIndex(-1);
     }
   };
 

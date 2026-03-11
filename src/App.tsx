@@ -22,16 +22,24 @@ export default function App() {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const [clothesRes, categoriesRes] = await Promise.all([
-        fetch('/api/clothes'),
-        fetch('/api/categories')
-      ]);
-      const clothesData = await clothesRes.json();
-      const categoriesData = await categoriesRes.json();
-      setClothes(clothesData);
-      setCategories(categoriesData);
+      // Load clothes from localStorage
+      const savedClothes = JSON.parse(localStorage.getItem('wardrobe_items') || '[]');
+      setClothes(savedClothes);
+
+      // Load categories from localStorage
+      let savedCategories = JSON.parse(localStorage.getItem('wardrobe_categories') || '[]');
+      if (savedCategories.length === 0) {
+        savedCategories = [
+          { id: 1, name: '上装' },
+          { id: 2, name: '下装' },
+          { id: 3, name: '外套' },
+          { id: 4, name: '鞋子' }
+        ];
+        localStorage.setItem('wardrobe_categories', JSON.stringify(savedCategories));
+      }
+      setCategories(savedCategories);
     } catch (error) {
-      console.error('Failed to fetch data', error);
+      console.error('Failed to load local data', error);
     } finally {
       setIsLoading(false);
     }
@@ -39,20 +47,13 @@ export default function App() {
 
   const handleAddCategory = async (name: string) => {
     try {
-      const response = await fetch('/api/categories', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name })
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to add category');
-      }
-      
-      const res = await fetch('/api/categories');
-      const data = await res.json();
-      setCategories(data);
+      const savedCategories = JSON.parse(localStorage.getItem('wardrobe_categories') || '[]');
+      if (savedCategories.find((c: any) => c.name === name)) return;
+
+      const newCategory = { id: Date.now(), name };
+      const updated = [...savedCategories, newCategory];
+      localStorage.setItem('wardrobe_categories', JSON.stringify(updated));
+      setCategories(updated);
     } catch (error) {
       console.error('Error adding category:', error);
       throw error;
@@ -68,8 +69,11 @@ export default function App() {
   };
 
   const handleDeleteItem = async (id: number) => {
-    await fetch(`/api/clothes/${id}`, { method: 'DELETE' });
-    setClothes(prev => prev.filter(item => item.id !== id));
+    const savedClothes = JSON.parse(localStorage.getItem('wardrobe_items') || '[]');
+    const updated = savedClothes.filter((item: any) => item.id !== id);
+    localStorage.setItem('wardrobe_items', JSON.stringify(updated));
+    
+    setClothes(updated);
     setSelectedItems(prev => prev.filter(item => item.id !== id));
   };
 
