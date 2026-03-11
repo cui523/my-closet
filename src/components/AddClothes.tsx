@@ -173,13 +173,13 @@ export default function AddClothes({ onSuccess, categories, onAddCategory }: Add
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-4 sm:p-6 bg-white rounded-3xl shadow-sm border border-black/5">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-serif italic">批量添加衣物</h2>
+    <div className="max-w-5xl mx-auto p-4 sm:p-8 bg-white rounded-[2.5rem] shadow-sm border border-black/5">
+      <div className="flex justify-between items-center mb-8">
+        <h2 className="text-2xl md:text-3xl font-serif italic">批量添加衣物</h2>
         {items.length > 0 && (
           <button 
             onClick={() => { setItems([]); setActiveIndex(-1); }}
-            className="text-xs font-mono uppercase tracking-widest opacity-40 hover:opacity-100"
+            className="text-[10px] font-mono uppercase tracking-widest opacity-40 hover:opacity-100 transition-opacity"
           >
             清空列表
           </button>
@@ -187,13 +187,16 @@ export default function AddClothes({ onSuccess, categories, onAddCategory }: Add
       </div>
       
       {items.length === 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
           <button 
-            className="flex flex-col items-center justify-center aspect-video sm:aspect-square border-2 border-dashed border-black/10 rounded-2xl hover:bg-black/5 active:scale-95 transition-all"
+            className="flex flex-col items-center justify-center aspect-video sm:aspect-square border-2 border-dashed border-black/10 rounded-[2rem] hover:bg-black/5 active:scale-95 transition-all group"
             onClick={() => cameraInputRef.current?.click()}
           >
-            <Camera className="w-8 h-8 mb-2 opacity-50" />
-            <span className="text-sm font-medium">拍照录入</span>
+            <div className="w-12 h-12 md:w-16 md:h-16 bg-black/5 rounded-full flex items-center justify-center mb-4 group-hover:bg-black group-hover:text-white transition-colors">
+              <Camera className="w-6 h-6 md:w-8 md:h-8" />
+            </div>
+            <span className="text-sm md:text-base font-medium">拍照录入</span>
+            <p className="text-[10px] font-mono uppercase tracking-widest opacity-30 mt-2">Use Camera</p>
           </button>
           <input 
             type="file" 
@@ -206,11 +209,14 @@ export default function AddClothes({ onSuccess, categories, onAddCategory }: Add
           />
           
           <button 
-            className="flex flex-col items-center justify-center aspect-video sm:aspect-square border-2 border-dashed border-black/10 rounded-2xl hover:bg-black/5 active:scale-95 transition-all"
+            className="flex flex-col items-center justify-center aspect-video sm:aspect-square border-2 border-dashed border-black/10 rounded-[2rem] hover:bg-black/5 active:scale-95 transition-all group"
             onClick={() => fileInputRef.current?.click()}
           >
-            <Upload className="w-8 h-8 mb-2 opacity-50" />
-            <span className="text-sm font-medium">相册批量选择</span>
+            <div className="w-12 h-12 md:w-16 md:h-16 bg-black/5 rounded-full flex items-center justify-center mb-4 group-hover:bg-black group-hover:text-white transition-colors">
+              <Upload className="w-6 h-6 md:w-8 md:h-8" />
+            </div>
+            <span className="text-sm md:text-base font-medium">相册批量选择</span>
+            <p className="text-[10px] font-mono uppercase tracking-widest opacity-30 mt-2">Upload Photos</p>
           </button>
           <input 
             type="file" 
@@ -222,15 +228,15 @@ export default function AddClothes({ onSuccess, categories, onAddCategory }: Add
           />
         </div>
       ) : (
-        <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex flex-col md:flex-row gap-10">
           {/* Sidebar: Queue */}
-          <div className="w-full lg:w-48 flex lg:flex-col gap-3 overflow-x-auto lg:overflow-y-auto pb-4 lg:pb-0 scrollbar-hide">
+          <div className="w-full md:w-32 lg:w-40 flex md:flex-col gap-4 overflow-x-auto md:overflow-y-auto pb-4 md:pb-0 scrollbar-hide">
             {items.map((item, idx) => (
               <button
                 key={item.id}
                 onClick={() => setActiveIndex(idx)}
-                className={`relative flex-shrink-0 w-20 h-20 lg:w-full lg:aspect-square rounded-xl overflow-hidden border-2 transition-all ${
-                  activeIndex === idx ? 'border-black scale-105 z-10' : 'border-transparent opacity-60 hover:opacity-100'
+                className={`relative flex-shrink-0 w-20 h-20 md:w-full md:aspect-square rounded-2xl overflow-hidden border-2 transition-all ${
+                  activeIndex === idx ? 'border-black scale-105 z-10 shadow-lg' : 'border-transparent opacity-60 hover:opacity-100'
                 } ${item.isSaved ? 'grayscale opacity-30' : ''}`}
               >
                 <img src={item.original} className="w-full h-full object-cover" />
@@ -241,15 +247,12 @@ export default function AddClothes({ onSuccess, categories, onAddCategory }: Add
                 )}
                 {item.isSaved && (
                   <div className="absolute inset-0 bg-emerald-500/20 flex items-center justify-center">
-                    <Check className="w-6 h-6 text-emerald-600" />
+                    <Check className="w-8 h-8 text-emerald-600" />
                   </div>
-                )}
-                {item.error && !item.isSaved && (
-                  <div className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
                 )}
                 <button 
                   onClick={(e) => { e.stopPropagation(); removeItem(idx); }}
-                  className="absolute top-1 left-1 p-1 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 lg:opacity-100"
+                  className="absolute top-1 left-1 p-1.5 bg-white/90 rounded-full md:opacity-0 group-hover:opacity-100 shadow-sm"
                 >
                   <Trash2 className="w-3 h-3 text-red-500" />
                 </button>
@@ -257,161 +260,156 @@ export default function AddClothes({ onSuccess, categories, onAddCategory }: Add
             ))}
             <button 
               onClick={() => fileInputRef.current?.click()}
-              className="flex-shrink-0 w-20 h-20 lg:w-full lg:aspect-square border-2 border-dashed border-black/10 rounded-xl flex items-center justify-center hover:bg-black/5"
+              className="flex-shrink-0 w-20 h-20 md:w-full md:aspect-square border-2 border-dashed border-black/10 rounded-2xl flex items-center justify-center hover:bg-black/5 transition-colors"
             >
               <Plus className="w-6 h-6 opacity-30" />
             </button>
           </div>
 
           {/* Main: Editor */}
-          <div className="flex-1 space-y-6">
+          <div className="flex-1 space-y-8">
             {activeItem ? (
-              <div className="space-y-6">
-                <div className="relative aspect-square bg-black/5 rounded-3xl overflow-hidden flex items-center justify-center border border-black/5">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="relative aspect-square bg-black/5 rounded-[2rem] overflow-hidden flex items-center justify-center border border-black/5">
                   {activeItem.isProcessing ? (
                     <div className="flex flex-col items-center">
                       <Loader2 className="w-10 h-10 animate-spin mb-3 opacity-20" />
-                      <p className="text-xs font-mono uppercase tracking-widest opacity-40">正在抠图...</p>
+                      <p className="text-[10px] font-mono uppercase tracking-widest opacity-40">正在处理...</p>
                     </div>
                   ) : (
-                    <div className="relative w-full h-full flex items-center justify-center p-8">
+                    <div className="relative w-full h-full flex items-center justify-center p-6 md:p-10">
                       <img 
                         src={activeItem.processed || activeItem.original} 
                         alt="Preview" 
                         className="max-w-full max-h-full object-contain drop-shadow-2xl"
                         referrerPolicy="no-referrer"
                       />
-                      {activeItem.error && (
-                        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur text-white text-[10px] px-4 py-1.5 rounded-full">
-                          抠图失败，已使用原图
-                        </div>
-                      )}
                     </div>
                   )}
                   
-                  <div className="absolute top-4 left-4 right-4 flex justify-between items-center pointer-events-none">
-                    <span className="bg-white/80 backdrop-blur px-3 py-1 rounded-full text-[10px] font-mono font-bold border border-black/5">
+                  <div className="absolute top-6 left-6 right-6 flex justify-between items-center pointer-events-none">
+                    <span className="bg-white/90 backdrop-blur px-4 py-1.5 rounded-full text-[10px] font-mono font-bold border border-black/5 shadow-sm">
                       {activeIndex + 1} / {items.length}
                     </span>
                     {activeItem.isSaved && (
-                      <span className="bg-emerald-500 text-white px-3 py-1 rounded-full text-[10px] font-bold">
+                      <span className="bg-emerald-500 text-white px-4 py-1.5 rounded-full text-[10px] font-bold shadow-sm">
                         已保存
                       </span>
                     )}
                   </div>
                 </div>
 
-                <div className="space-y-6">
-                  <div className="flex justify-between items-center gap-4">
-                    <button 
-                      disabled={activeIndex === 0}
-                      onClick={() => setActiveIndex(prev => prev - 1)}
-                      className="p-3 bg-black/5 rounded-full disabled:opacity-10"
-                    >
-                      <ChevronLeft className="w-5 h-5" />
-                    </button>
-                    
-                    <div className="flex-1 space-y-4">
-                      <div>
-                        <label className="block text-[10px] font-mono uppercase tracking-widest opacity-40 mb-2">季节</label>
-                        <div className="flex flex-wrap gap-2">
-                          {SEASONS.map(season => (
-                            <button
-                              key={season}
-                              onClick={() => toggleSeason(season)}
-                              className={`px-4 py-2 rounded-full text-xs font-medium transition-all ${
-                                activeItem.seasons.includes(season) 
-                                  ? 'bg-black text-white' 
-                                  : 'bg-black/5 hover:bg-black/10'
-                              }`}
-                            >
-                              {season}
-                            </button>
-                          ))}
+                <div className="flex flex-col justify-between space-y-8">
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-center gap-4">
+                      <button 
+                        disabled={activeIndex === 0}
+                        onClick={() => setActiveIndex(prev => prev - 1)}
+                        className="p-3 bg-black/5 rounded-full disabled:opacity-10 hover:bg-black/10 transition-colors"
+                      >
+                        <ChevronLeft className="w-5 h-5" />
+                      </button>
+                      
+                      <div className="flex-1 space-y-6">
+                        <div>
+                          <label className="block text-[10px] font-mono uppercase tracking-widest opacity-40 mb-3">季节</label>
+                          <div className="flex flex-wrap gap-2">
+                            {SEASONS.map(season => (
+                              <button
+                                key={season}
+                                onClick={() => toggleSeason(season)}
+                                className={`px-5 py-2.5 rounded-full text-xs font-medium transition-all ${
+                                  activeItem.seasons.includes(season) 
+                                    ? 'bg-black text-white shadow-md' 
+                                    : 'bg-black/5 hover:bg-black/10'
+                                }`}
+                              >
+                                {season}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-mono uppercase tracking-widest opacity-40 mb-3">类别</label>
+                          <div className="flex flex-wrap gap-2">
+                            {categories.map(cat => (
+                              <button
+                                key={cat.id}
+                                onClick={() => updateActiveItem({ category: cat.name })}
+                                className={`px-5 py-2.5 rounded-full text-xs font-medium transition-all ${
+                                  activeItem.category === cat.name 
+                                    ? 'bg-black text-white shadow-md' 
+                                    : 'bg-black/5 hover:bg-black/10'
+                                }`}
+                              >
+                                {cat.name}
+                              </button>
+                            ))}
+                            {showNewCategoryInput ? (
+                              <div className="flex gap-2 w-full mt-2">
+                                <input
+                                  type="text"
+                                  value={newCategory}
+                                  onChange={(e) => setNewCategory(e.target.value)}
+                                  onKeyDown={(e) => e.key === 'Enter' && handleAddCategory()}
+                                  placeholder="新类别..."
+                                  className="flex-1 px-5 py-2.5 bg-black/5 rounded-full text-xs outline-none focus:ring-1 ring-black/20"
+                                  autoFocus
+                                />
+                                <button onClick={handleAddCategory} className="p-2.5 bg-black text-white rounded-full shadow-sm"><Check className="w-4 h-4" /></button>
+                                <button onClick={() => setShowNewCategoryInput(false)} className="p-2.5 bg-black/5 rounded-full"><X className="w-4 h-4" /></button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setShowNewCategoryInput(true)}
+                                className="px-5 py-2.5 rounded-full text-xs bg-black/5 hover:bg-black/10 flex items-center gap-2 transition-colors"
+                              >
+                                <Plus className="w-3.5 h-3.5" /> 新增
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-mono uppercase tracking-widest opacity-40 mb-3">位置</label>
+                          <input
+                            type="text"
+                            value={activeItem.location}
+                            onChange={(e) => updateActiveItem({ location: e.target.value })}
+                            placeholder="存放位置..."
+                            className="w-full px-5 py-4 bg-black/5 rounded-2xl text-xs outline-none focus:ring-1 ring-black/20 transition-all"
+                          />
                         </div>
                       </div>
 
-                      <div>
-                        <label className="block text-[10px] font-mono uppercase tracking-widest opacity-40 mb-2">类别</label>
-                        <div className="flex flex-wrap gap-2">
-                          {categories.map(cat => (
-                            <button
-                              key={cat.id}
-                              onClick={() => updateActiveItem({ category: cat.name })}
-                              className={`px-4 py-2 rounded-full text-xs font-medium transition-all ${
-                                activeItem.category === cat.name 
-                                  ? 'bg-black text-white' 
-                                  : 'bg-black/5 hover:bg-black/10'
-                              }`}
-                            >
-                              {cat.name}
-                            </button>
-                          ))}
-                          {showNewCategoryInput ? (
-                            <div className="flex gap-2 w-full mt-1">
-                              <input
-                                type="text"
-                                value={newCategory}
-                                onChange={(e) => setNewCategory(e.target.value)}
-                                onKeyDown={(e) => e.key === 'Enter' && handleAddCategory()}
-                                placeholder="新类别..."
-                                className="flex-1 px-4 py-2 bg-black/5 rounded-full text-xs outline-none focus:ring-1 ring-black/20"
-                                autoFocus
-                              />
-                              <button onClick={handleAddCategory} className="p-2 bg-black text-white rounded-full"><Check className="w-4 h-4" /></button>
-                              <button onClick={() => setShowNewCategoryInput(false)} className="p-2 bg-black/5 rounded-full"><X className="w-4 h-4" /></button>
-                            </div>
-                          ) : (
-                            <button
-                              onClick={() => setShowNewCategoryInput(true)}
-                              className="px-4 py-2 rounded-full text-xs bg-black/5 hover:bg-black/10 flex items-center gap-1"
-                            >
-                              <Plus className="w-3 h-3" /> 新增
-                            </button>
-                          )}
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-[10px] font-mono uppercase tracking-widest opacity-40 mb-2">位置</label>
-                        <input
-                          type="text"
-                          value={activeItem.location}
-                          onChange={(e) => updateActiveItem({ location: e.target.value })}
-                          placeholder="存放位置..."
-                          className="w-full px-4 py-3 bg-black/5 rounded-2xl text-xs outline-none focus:ring-1 ring-black/20"
-                        />
-                      </div>
+                      <button 
+                        disabled={activeIndex === items.length - 1}
+                        onClick={() => setActiveIndex(prev => prev + 1)}
+                        className="p-3 bg-black/5 rounded-full disabled:opacity-10 hover:bg-black/10 transition-colors"
+                      >
+                        <ChevronRight className="w-5 h-5" />
+                      </button>
                     </div>
 
-                    <button 
-                      disabled={activeIndex === items.length - 1}
-                      onClick={() => setActiveIndex(prev => prev + 1)}
-                      className="p-3 bg-black/5 rounded-full disabled:opacity-10"
+                    <button
+                      onClick={handleSaveActive}
+                      disabled={!activeItem.category || !activeItem.processed || activeItem.isProcessing || activeItem.isSaved}
+                      className="w-full py-5 bg-black text-white rounded-2xl font-medium disabled:opacity-20 disabled:cursor-not-allowed hover:bg-black/90 active:scale-[0.98] transition-all flex items-center justify-center gap-3 shadow-xl"
                     >
-                      <ChevronRight className="w-5 h-5" />
+                      {activeItem.isSaved ? (
+                        <><Check className="w-5 h-5" /> 已保存到衣柜</>
+                      ) : (
+                        '保存这件衣服'
+                      )}
                     </button>
                   </div>
-
-                  <button
-                    onClick={handleSaveActive}
-                    disabled={!activeItem.category || !activeItem.processed || activeItem.isProcessing || activeItem.isSaved}
-                    className="w-full py-4 bg-black text-white rounded-2xl font-medium disabled:opacity-20 disabled:cursor-not-allowed hover:bg-black/90 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-                  >
-                    {activeItem.isSaved ? (
-                      <><Check className="w-5 h-5" /> 已保存到衣柜</>
-                    ) : activeItem.isProcessing ? (
-                      <><Loader2 className="w-5 h-5 animate-spin" /> 正在抠图...</>
-                    ) : (
-                      '保存这件衣服'
-                    )}
-                  </button>
                 </div>
               </div>
             ) : (
-              <div className="h-full flex flex-col items-center justify-center opacity-20 py-20">
-                <Shirt className="w-16 h-16 mb-4" />
-                <p className="font-serif italic">选择左侧图片开始编辑</p>
+              <div className="h-full flex flex-col items-center justify-center opacity-20 py-32">
+                <Shirt className="w-20 h-20 mb-6" />
+                <p className="text-lg font-serif italic">选择左侧图片开始编辑</p>
               </div>
             )}
           </div>
