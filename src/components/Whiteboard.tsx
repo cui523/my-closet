@@ -33,7 +33,7 @@ const URLImage = ({ item, isSelected, onSelect, onChange }: {
   const trRef = useRef<any>(null);
 
   useEffect(() => {
-    if (img && item.width === 200 && item.height === 200) {
+    if (img && (item.width === 0 || item.height === 0)) {
       // Set initial size based on aspect ratio
       const maxWidth = 200;
       const maxHeight = 200;
@@ -41,13 +41,16 @@ const URLImage = ({ item, isSelected, onSelect, onChange }: {
       let height = img.height;
 
       const ratio = Math.min(maxWidth / width, maxHeight / height);
-      width *= ratio;
-      height *= ratio;
+      const finalWidth = width * ratio;
+      const finalHeight = height * ratio;
 
       onChange({
         ...item,
-        width,
-        height
+        width: finalWidth,
+        height: finalHeight,
+        // Set offset to center for better rotation
+        offsetX: finalWidth / 2,
+        offsetY: finalHeight / 2,
       });
     }
   }, [img]);
@@ -85,17 +88,34 @@ const URLImage = ({ item, isSelected, onSelect, onChange }: {
           const scaleX = node.scaleX();
           const scaleY = node.scaleY();
           
-          // Reset scale and update width/height to avoid distortion
+          // Reset scale
           node.scaleX(1);
           node.scaleY(1);
+          
+          // Calculate new dimensions while strictly maintaining aspect ratio
+          const newWidth = Math.max(5, node.width() * scaleX);
+          const newHeight = Math.max(5, node.height() * scaleY);
+          
+          // Use the image's natural aspect ratio to correct any minor drift
+          const imageRatio = img.width / img.height;
+          let finalWidth = newWidth;
+          let finalHeight = newHeight;
+          
+          if (newWidth / newHeight > imageRatio) {
+            finalWidth = newHeight * imageRatio;
+          } else {
+            finalHeight = newWidth / imageRatio;
+          }
           
           onChange({
             ...item,
             x: node.x(),
             y: node.y(),
-            width: Math.max(5, node.width() * scaleX),
-            height: Math.max(5, node.height() * scaleY),
+            width: finalWidth,
+            height: finalHeight,
             rotation: node.rotation(),
+            offsetX: finalWidth / 2,
+            offsetY: finalHeight / 2,
           });
         }}
       />
@@ -103,9 +123,17 @@ const URLImage = ({ item, isSelected, onSelect, onChange }: {
         <Transformer
           ref={trRef}
           keepRatio={true}
+          rotateEnabled={true}
+          rotationSnaps={[0, 45, 90, 135, 180, 225, 270, 315]}
           enabledAnchors={['top-left', 'top-right', 'bottom-left', 'bottom-right']}
+          anchorSize={10}
+          anchorCornerRadius={5}
+          anchorStroke="#000"
+          anchorFill="#fff"
+          borderStroke="#000"
+          borderDash={[3, 3]}
           boundBoxFunc={(oldBox, newBox) => {
-            if (newBox.width < 5 || newBox.height < 5) {
+            if (Math.abs(newBox.width) < 5 || Math.abs(newBox.height) < 5) {
               return oldBox;
             }
             return newBox;
@@ -124,27 +152,38 @@ export default function Whiteboard({ selectedItems, onBack }: WhiteboardProps) {
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
 
   useEffect(() => {
-    if (containerRef.current) {
-      setDimensions({
-        width: containerRef.current.offsetWidth,
-        height: containerRef.current.offsetHeight,
-      });
-    }
+    const container = containerRef.current;
+    if (!container) return;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setDimensions({
+          width: entry.contentRect.width,
+          height: entry.contentRect.height,
+        });
+      }
+    });
+
+    resizeObserver.observe(container);
 
     // Initialize canvas items from selected items
     const initialItems = selectedItems.map((item, index) => ({
       id: `canvas-${item.id}-${index}`,
       itemId: item.id,
       image: item.image,
-      x: 50 + (index * 40),
-      y: 50 + (index * 40),
-      width: 200,
-      height: 200,
+      x: 150 + (index * 40), // Shifted to account for center offset
+      y: 150 + (index * 40),
+      width: 0,
+      height: 0,
       rotation: 0,
       scaleX: 1,
       scaleY: 1,
+      offsetX: 0,
+      offsetY: 0,
     }));
     setCanvasItems(initialItems);
+
+    return () => resizeObserver.disconnect();
   }, [selectedItems]);
 
   const handleStageClick = (e: any) => {
