@@ -137,29 +137,38 @@ export default function AddClothes({ onSuccess, categories, onAddCategory }: Add
   const handleSaveActive = async () => {
     if (!activeItem || !activeItem.processed || !activeItem.category) return;
 
-    const newItem = {
-      id: Date.now(),
-      image: activeItem.processed,
-      originalImage: activeItem.original,
-      seasons: activeItem.seasons,
-      category: activeItem.category,
-      location: activeItem.location,
-      createdAt: new Date().toISOString()
-    };
+    try {
+      const newItem = {
+        id: Date.now() + Math.floor(Math.random() * 10000),
+        image: activeItem.processed,
+        originalImage: activeItem.original,
+        seasons: activeItem.seasons,
+        category: activeItem.category,
+        location: activeItem.location,
+        createdAt: new Date().toISOString()
+      };
 
-    // Save to localStorage via App's onSuccess or direct implementation
-    // For simplicity, we'll let App handle the state update
-    const savedItems = JSON.parse(localStorage.getItem('wardrobe_items') || '[]');
-    localStorage.setItem('wardrobe_items', JSON.stringify([...savedItems, newItem]));
+      const savedItems = JSON.parse(localStorage.getItem('wardrobe_items') || '[]');
+      const updatedItems = [...savedItems, newItem];
+      
+      localStorage.setItem('wardrobe_items', JSON.stringify(updatedItems));
 
-    updateActiveItem({ isSaved: true });
-    
-    // If all saved, trigger success
-    const allSaved = items.every((it, idx) => idx === activeIndex ? true : it.isSaved);
-    if (allSaved) {
-      onSuccess();
-      setItems([]);
-      setActiveIndex(-1);
+      updateActiveItem({ isSaved: true });
+      
+      // If all saved, trigger success
+      const allSaved = items.every((it, idx) => idx === activeIndex ? true : it.isSaved);
+      if (allSaved) {
+        onSuccess();
+        setItems([]);
+        setActiveIndex(-1);
+      }
+    } catch (error: any) {
+      console.error("Save failed:", error);
+      if (error.name === 'QuotaExceededError' || error.message.includes('quota')) {
+        alert('存储空间已满。请尝试删除一些旧衣服后再添加新衣服。');
+      } else {
+        alert('保存失败，请重试。');
+      }
     }
   };
 

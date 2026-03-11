@@ -97,7 +97,10 @@ export default function App() {
         <div className="flex items-center gap-3">
           {view === 'add' && (
             <button 
-              onClick={() => setView('wardrobe')}
+              onClick={() => {
+                fetchData();
+                setView('wardrobe');
+              }}
               className="px-4 py-2 bg-black/5 hover:bg-black/10 rounded-full text-xs font-medium transition-colors"
             >
               返回衣柜
