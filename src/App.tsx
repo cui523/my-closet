@@ -5,6 +5,7 @@ import Wardrobe from './components/Wardrobe';
 import Whiteboard from './components/Whiteboard';
 import { ClothingItem } from './types';
 import { motion, AnimatePresence } from 'motion/react';
+import { wardrobeStorage } from './services/storage';
 
 type View = 'wardrobe' | 'add' | 'whiteboard';
 
@@ -22,12 +23,42 @@ export default function App() {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      // Load clothes from localStorage
-      const savedClothes = JSON.parse(localStorage.getItem('wardrobe_items') || '[]');
+      // Migration: Check if there's data in localStorage and move it to IndexedDB
+      const legacyClothes = localStorage.getItem('wardrobe_items');
+      if (legacyClothes) {
+        try {
+          const parsed = JSON.parse(legacyClothes);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            for (const item of parsed) {
+              await wardrobeStorage.saveClothingItem(item);
+            }
+            // Clear legacy data after successful migration
+            localStorage.removeItem('wardrobe_items');
+          }
+        } catch (e) {
+          console.error('Migration failed', e);
+        }
+      }
+
+      const legacyCategories = localStorage.getItem('wardrobe_categories');
+      if (legacyCategories) {
+        try {
+          const parsed = JSON.parse(legacyCategories);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            await wardrobeStorage.saveAllCategories(parsed);
+            localStorage.removeItem('wardrobe_categories');
+          }
+        } catch (e) {
+          console.error('Category migration failed', e);
+        }
+      }
+
+      // Load clothes from IndexedDB
+      const savedClothes = await wardrobeStorage.getAllClothes();
       setClothes(savedClothes);
 
-      // Load categories from localStorage
-      let savedCategories = JSON.parse(localStorage.getItem('wardrobe_categories') || '[]');
+      // Load categories from IndexedDB
+      let savedCategories = await wardrobeStorage.getAllCategories();
       if (savedCategories.length === 0) {
         savedCategories = [
           { id: 1, name: '上装' },
@@ -35,7 +66,7 @@ export default function App() {
           { id: 3, name: '外套' },
           { id: 4, name: '鞋子' }
         ];
-        localStorage.setItem('wardrobe_categories', JSON.stringify(savedCategories));
+        await wardrobeStorage.saveAllCategories(savedCategories);
       }
       setCategories(savedCategories);
     } catch (error) {
@@ -47,13 +78,12 @@ export default function App() {
 
   const handleAddCategory = async (name: string) => {
     try {
-      const savedCategories = JSON.parse(localStorage.getItem('wardrobe_categories') || '[]');
+      const savedCategories = await wardrobeStorage.getAllCategories();
       if (savedCategories.find((c: any) => c.name === name)) return;
 
       const newCategory = { id: Date.now(), name };
-      const updated = [...savedCategories, newCategory];
-      localStorage.setItem('wardrobe_categories', JSON.stringify(updated));
-      setCategories(updated);
+      await wardrobeStorage.saveCategory(newCategory);
+      setCategories(prev => [...prev, newCategory]);
     } catch (error) {
       console.error('Error adding category:', error);
       throw error;
@@ -69,21 +99,29 @@ export default function App() {
   };
 
   const handleDeleteItem = async (id: number) => {
-    const savedClothes = JSON.parse(localStorage.getItem('wardrobe_items') || '[]');
-    const updated = savedClothes.filter((item: any) => item.id !== id);
-    localStorage.setItem('wardrobe_items', JSON.stringify(updated));
-    
-    setClothes(updated);
-    setSelectedItems(prev => prev.filter(item => item.id !== id));
+    try {
+      await wardrobeStorage.deleteClothingItem(id);
+      setClothes(prev => prev.filter(item => item.id !== id));
+      setSelectedItems(prev => prev.filter(item => item.id !== id));
+    } catch (error) {
+      console.error('Error deleting item:', error);
+    }
   };
 
   const handleUpdateItem = async (id: number, updates: Partial<ClothingItem>) => {
-    const savedClothes = JSON.parse(localStorage.getItem('wardrobe_items') || '[]');
-    const updated = savedClothes.map((item: any) => 
-      item.id === id ? { ...item, ...updates } : item
-    );
-    localStorage.setItem('wardrobe_items', JSON.stringify(updated));
-    setClothes(updated);
+    try {
+      const itemToUpdate = clothes.find(i => i.id === id);
+      if (!itemToUpdate) return;
+      
+      const updatedItem = { ...itemToUpdate, ...updates };
+      await wardrobeStorage.saveClothingItem(updatedItem);
+      
+      setClothes(prev => prev.map(item => 
+        item.id === id ? updatedItem : item
+      ));
+    } catch (error) {
+      console.error('Error updating item:', error);
+    }
   };
 
   return (

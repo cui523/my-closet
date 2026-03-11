@@ -4,6 +4,7 @@ import { removeBackground } from '../services/gemini';
 import { SEASONS, Season } from '../types';
 import { resizeImage } from '../utils/image';
 import { motion, AnimatePresence } from 'motion/react';
+import { wardrobeStorage } from '../services/storage';
 
 interface AddClothesProps {
   onSuccess: () => void;
@@ -148,10 +149,7 @@ export default function AddClothes({ onSuccess, categories, onAddCategory }: Add
         createdAt: new Date().toISOString()
       };
 
-      const savedItems = JSON.parse(localStorage.getItem('wardrobe_items') || '[]');
-      const updatedItems = [...savedItems, newItem];
-      
-      localStorage.setItem('wardrobe_items', JSON.stringify(updatedItems));
+      await wardrobeStorage.saveClothingItem(newItem);
 
       updateActiveItem({ isSaved: true });
       
@@ -165,9 +163,9 @@ export default function AddClothes({ onSuccess, categories, onAddCategory }: Add
     } catch (error: any) {
       console.error("Save failed:", error);
       if (error.name === 'QuotaExceededError' || error.message.includes('quota')) {
-        alert('存储空间已满。请尝试删除一些旧衣服后再添加新衣服。');
+        alert('设备存储空间不足。请清理手机空间后再试。');
       } else {
-        alert('保存失败，请重试。');
+        alert('保存失败，请检查网络或重试。');
       }
     }
   };
